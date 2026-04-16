@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import PostCard from '../components/PostCard.jsx';
-import ParticleCanvas from '../components/ParticleCanvas.jsx';
 import { useWallPosts } from '../hooks/useWallPosts.js';
 import { THEMES, DEFAULT_THEME_KEY } from '../themes/themes.js';
 import vibeconLogo from '../assets/vibecon-logo.svg';
@@ -41,13 +40,12 @@ function ScrollBanner({ posts, theme }) {
 
       offsetRef.current += SCROLL_PX_PER_SEC * delta;
 
-      // Each "set" of posts has this total width
       const setWidth = posts.length * (CARD_WIDTH + CARD_GAP);
       if (offsetRef.current >= setWidth) {
         offsetRef.current -= setWidth;
       }
 
-      trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`;
+      trackRef.current.style.transform = `translate3d(-${offsetRef.current}px, 0, 0)`;
       raf = requestAnimationFrame(tick);
     };
 
@@ -88,7 +86,12 @@ function ScrollBanner({ posts, theme }) {
     <div
       ref={trackRef}
       className="flex items-stretch"
-      style={{ gap: `${CARD_GAP}px`, paddingLeft: `${CARD_GAP}px` }}
+      style={{
+        gap: `${CARD_GAP}px`,
+        paddingLeft: `${CARD_GAP}px`,
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+      }}
     >
       {[...posts, ...posts].map((post, i) => (
         <div
@@ -115,16 +118,6 @@ export default function Wall() {
       className="h-screen w-screen overflow-hidden flex flex-col relative"
       style={{ backgroundColor: theme.bg, backgroundImage: theme.bgGradient }}
     >
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(${theme.grid} 1px, transparent 1px)`,
-          backgroundSize: '24px 24px',
-        }}
-      />
-
-      <ParticleCanvas color={theme.particle} />
-
       {/* Header bar */}
       <header
         className="relative z-30 h-14 px-6 flex items-center justify-between border-b shrink-0"
@@ -156,16 +149,24 @@ export default function Wall() {
         <ScrollBanner posts={posts} theme={theme} />
       </main>
 
-      {/* Sponsor ticker */}
+      {/* Sponsor ticker — GPU-composited layer */}
       <div
         className="relative z-20 h-12 flex items-center overflow-hidden border-t shrink-0"
-        style={{ backgroundColor: theme.ticker, color: theme.tickerText, borderColor: theme.cardBorder }}
+        style={{
+          backgroundColor: theme.ticker,
+          color: theme.tickerText,
+          borderColor: theme.cardBorder,
+          transform: 'translateZ(0)',
+        }}
       >
         <div className="px-4 py-1 mr-4 text-[10px] font-black uppercase tracking-widest border-r border-white/10 flex items-center gap-1 shrink-0">
           ★ Sponsors
         </div>
         <div className="flex-1 overflow-hidden">
-          <div className="flex animate-marquee whitespace-nowrap">
+          <div
+            className="flex animate-marquee whitespace-nowrap"
+            style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+          >
             {[...SPONSORS, ...SPONSORS].map((s, i) => (
               <span key={i} className="px-6 text-xs font-black uppercase tracking-widest">
                 {s} ·

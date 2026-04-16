@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import PostCard from '../components/PostCard.jsx';
-import ParticleCanvas from '../components/ParticleCanvas.jsx';
 import HostPanel from '../components/HostPanel.jsx';
 import { useWallPosts } from '../hooks/useWallPosts.js';
 import { THEMES, DEFAULT_THEME_KEY } from '../themes/themes.js';
@@ -82,7 +81,7 @@ function ScrollBanner({ posts, theme, onDelete }) {
         offsetRef.current -= setWidth;
       }
 
-      trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`;
+      trackRef.current.style.transform = `translate3d(-${offsetRef.current}px, 0, 0)`;
       raf = requestAnimationFrame(tick);
     };
 
@@ -123,7 +122,12 @@ function ScrollBanner({ posts, theme, onDelete }) {
     <div
       ref={trackRef}
       className="flex items-stretch"
-      style={{ gap: `${CARD_GAP}px`, paddingLeft: `${CARD_GAP}px` }}
+      style={{
+        gap: `${CARD_GAP}px`,
+        paddingLeft: `${CARD_GAP}px`,
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+      }}
     >
       {[...posts, ...posts].map((post, i) => (
         <div
@@ -178,8 +182,6 @@ export default function Admin() {
           backgroundSize: '24px 24px',
         }}
       />
-
-      <ParticleCanvas color={theme.particle} />
 
       {/* Header bar */}
       <header
