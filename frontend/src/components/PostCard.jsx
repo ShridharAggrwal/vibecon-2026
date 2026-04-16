@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { buildEmbedUrl } from '../utils/parseLinkedin.js';
 
@@ -11,7 +10,7 @@ const colorFor = (id) => {
   return COLORS[h % COLORS.length];
 };
 
-export default function PostCard({ post, theme, displayMode, onDelete }) {
+export default function PostCard({ post, theme, onDelete }) {
   const accentColor = post.color || colorFor(post.id);
   const embedUrl = buildEmbedUrl(post.activity_id);
 
@@ -21,25 +20,16 @@ export default function PostCard({ post, theme, displayMode, onDelete }) {
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0, rotateZ: -3 }}
-      animate={{ opacity: 1, scale: 1, rotateZ: 0 }}
-      exit={{ opacity: 0, scale: 0.85 }}
-      transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-      className={`relative overflow-hidden rounded-2xl border-l-[5px] flex flex-col h-full ${
-        post.isNew ? 'animate-pulse-glow' : ''
-      }`}
+    <div
+      className="relative overflow-hidden rounded-2xl border-l-[5px] flex flex-col h-full"
       style={{
         backgroundColor: theme.card,
         color: theme.cardText,
         borderLeftColor: accentColor,
-        boxShadow: post.isNew
-          ? `0 0 0 3px ${accentColor}66, 0 8px 24px rgba(0,0,0,0.18)`
-          : '0 4px 16px rgba(0,0,0,0.10)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
       }}
     >
-      {!displayMode && onDelete && (
+      {onDelete && (
         <button
           onClick={handleDelete}
           className="absolute top-2 left-2 z-20 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:scale-110 transition shadow"
@@ -47,17 +37,6 @@ export default function PostCard({ post, theme, displayMode, onDelete }) {
         >
           <Trash2 size={12} />
         </button>
-      )}
-
-      {post.isNew && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, type: 'spring' }}
-          className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-black bg-vibe-orange text-white"
-        >
-          NEW
-        </motion.div>
       )}
 
       {embedUrl ? (
@@ -74,6 +53,6 @@ export default function PostCard({ post, theme, displayMode, onDelete }) {
           </p>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

@@ -1,35 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabase.js';
 
-const MAX_POSTS = 8;
-const NEW_FLAG_RESET_MS = 3_500;
-
 export function useWallPosts() {
   const [posts, setPosts] = useState([]);
-  const [postCount, setPostCount] = useState(0);
-  const [planeTrigger, setPlaneTrigger] = useState(0);
   const seenIds = useRef(new Set());
 
-  const addNewPost = useCallback((post) => {
+  const addPost = useCallback((post) => {
     if (seenIds.current.has(post.id)) return;
     seenIds.current.add(post.id);
     setPosts((prev) => {
       if (prev.some((p) => p.id === post.id)) return prev;
-      const flagged = { ...post, isNew: true };
-      return [flagged, ...prev].slice(0, MAX_POSTS);
+      return [post, ...prev];
     });
-    setPlaneTrigger((n) => n + 1);
-    setPostCount((n) => n + 1);
-    setTimeout(() => {
-      setPosts((prev) =>
-        prev.map((p) => (p.id === post.id ? { ...p, isNew: false } : p))
-      );
-    }, NEW_FLAG_RESET_MS);
   }, []);
 
   const removePost = useCallback((postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
-    setPostCount((n) => Math.max(0, n - 1));
   }, []);
 
   // Fetch initial posts
@@ -42,8 +28,7 @@ export function useWallPosts() {
 
       if (!error && data) {
         data.forEach((p) => seenIds.current.add(p.id));
-        setPosts(data.slice(0, MAX_POSTS));
-        setPostCount(data.length);
+        setPosts(data);
       }
     };
     fetchPosts();
@@ -57,7 +42,7 @@ export function useWallPosts() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
         (payload) => {
-          addNewPost(payload.new);
+          addPost(payload.new);
         }
       )
       .on(
@@ -72,13 +57,7 @@ export function useWallPosts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [addNewPost, removePost]);
+  }, [addPost, removePost]);
 
-  return {
-    posts,
-    postCount,
-    setPostCount,
-    planeTrigger,
-    removePost,
-  };
+  return { posts, removePost };
 }

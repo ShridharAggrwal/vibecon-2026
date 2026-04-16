@@ -35,3 +35,14 @@
 .animate-marquee {
   animation: marquee 40s linear infinite;
 }
+
+@keyframes scroll-wall {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-wall-scroll {
+  animation: scroll-wall var(--scroll-duration, 60s) linear infinite;
+}
+.animate-wall-scroll:hover {
+  animation-play-state: paused;
+}

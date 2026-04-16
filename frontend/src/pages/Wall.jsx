@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import PostCard from '../components/PostCard.jsx';
-import PaperPlane from '../components/PaperPlane.jsx';
 import ParticleCanvas from '../components/ParticleCanvas.jsx';
 import { useWallPosts } from '../hooks/useWallPosts.js';
 import { THEMES, DEFAULT_THEME_KEY } from '../themes/themes.js';
@@ -11,6 +9,10 @@ const SPONSORS = [
   'Emergent', 'Polaris School of Technology', 'OpenAI', 'MongoDB', 'AWS', 'Razorpay',
   'Stripe', 'Anthropic', 'Wispr Flow', 'Linear', 'Vercel', 'Supabase',
 ];
+
+const CARD_WIDTH = 380;
+const CARD_GAP = 20;
+const SCROLL_SPEED_PER_CARD = 8; // seconds per card
 
 function Clock() {
   const [now, setNow] = useState(() => new Date());
@@ -26,9 +28,10 @@ export default function Wall() {
     localStorage.getItem('vibecon_theme') || DEFAULT_THEME_KEY
   );
   const theme = THEMES[themeKey] || THEMES[DEFAULT_THEME_KEY];
+  const { posts } = useWallPosts();
 
-  const { posts, postCount, planeTrigger } = useWallPosts();
-  const visiblePosts = useMemo(() => posts.slice(0, 8), [posts]);
+  const shouldScroll = posts.length >= 4;
+  const scrollDuration = `${posts.length * SCROLL_SPEED_PER_CARD}s`;
 
   return (
     <div
@@ -47,7 +50,7 @@ export default function Wall() {
 
       {/* Header bar */}
       <header
-        className="relative z-30 h-14 px-6 flex items-center justify-between border-b"
+        className="relative z-30 h-14 px-6 flex items-center justify-between border-b shrink-0"
         style={{ backgroundColor: theme.header, color: theme.headerText, borderColor: theme.cardBorder }}
       >
         <div className="flex items-center gap-3">
@@ -56,15 +59,11 @@ export default function Wall() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span
-              className="h-2 w-2 rounded-full animate-pulse"
-              style={{ backgroundColor: theme.live }}
-            />
+            <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: theme.live }} />
             <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.live }}>
               LIVE
             </span>
           </div>
-          <span className="text-xs font-bold opacity-70">{postCount} posts</span>
           <span className="text-xs font-bold opacity-70">300 BUILDERS</span>
         </div>
 
@@ -75,24 +74,56 @@ export default function Wall() {
         </div>
       </header>
 
-      {/* Grid */}
-      <main className="relative z-10 flex-1 grid grid-cols-4 auto-rows-fr gap-3 p-3 min-h-0 overflow-y-auto">
-        <AnimatePresence>
-          {visiblePosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              theme={theme}
-              displayMode={false}
-              onDelete={null}
-            />
-          ))}
-        </AnimatePresence>
+      {/* Scrolling post banner */}
+      <main className="relative z-10 flex-1 flex items-center overflow-hidden">
+        {posts.length === 0 ? (
+          <div className="w-full text-center">
+            <p className="text-lg font-black uppercase tracking-widest opacity-30" style={{ color: theme.headerText }}>
+              Waiting for posts...
+            </p>
+          </div>
+        ) : shouldScroll ? (
+          <div
+            className="flex animate-wall-scroll items-stretch"
+            style={{
+              '--scroll-duration': scrollDuration,
+              gap: `${CARD_GAP}px`,
+              paddingLeft: `${CARD_GAP}px`,
+            }}
+          >
+            {/* Render posts twice for seamless loop */}
+            {[...posts, ...posts].map((post, i) => (
+              <div
+                key={`${post.id}-${i}`}
+                className="shrink-0"
+                style={{ width: `${CARD_WIDTH}px`, height: 'calc(100vh - 56px - 48px - 40px)' }}
+              >
+                <PostCard post={post} theme={theme} onDelete={null} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Fewer than 4 posts — show centered static */
+          <div
+            className="flex items-stretch justify-center w-full"
+            style={{ gap: `${CARD_GAP}px`, padding: `0 ${CARD_GAP}px` }}
+          >
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                className="shrink-0"
+                style={{ width: `${CARD_WIDTH}px`, height: 'calc(100vh - 56px - 48px - 40px)' }}
+              >
+                <PostCard post={post} theme={theme} onDelete={null} />
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Sponsor ticker */}
       <div
-        className="relative z-20 h-12 flex items-center overflow-hidden border-t"
+        className="relative z-20 h-12 flex items-center overflow-hidden border-t shrink-0"
         style={{ backgroundColor: theme.ticker, color: theme.tickerText, borderColor: theme.cardBorder }}
       >
         <div className="px-4 py-1 mr-4 text-[10px] font-black uppercase tracking-widest border-r border-white/10 flex items-center gap-1 shrink-0">
@@ -108,8 +139,6 @@ export default function Wall() {
           </div>
         </div>
       </div>
-
-      <PaperPlane trigger={planeTrigger} />
     </div>
   );
 }

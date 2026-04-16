@@ -1,23 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Link2, Monitor, QrCode, Settings, Download, X, Hash, Minus, Plus, Check, Loader2 } from 'lucide-react';
+import { LogOut, Link2, QrCode, Settings, Download, X, Check, Loader2 } from 'lucide-react';
 import { supabase } from '../utils/supabase.js';
 import { extractActivityId } from '../utils/parseLinkedin.js';
 
 const QR_BASE = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=';
 
-export default function HostPanel({ onDisplayMode, onLogout, postCount, setPostCount }) {
+export default function HostPanel({ onLogout }) {
   const [open, setOpen] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [showAddPost, setShowAddPost] = useState(false);
-  const [showCount, setShowCount] = useState(false);
 
   const [linkUrl, setLinkUrl] = useState('');
   const [linkSubmitting, setLinkSubmitting] = useState(false);
   const [linkError, setLinkError] = useState('');
   const [linkSuccess, setLinkSuccess] = useState(false);
-
-  const [countInput, setCountInput] = useState('');
 
   const guideUrl = `${window.location.origin}/guide`;
   const qrSrc = `${QR_BASE}${encodeURIComponent(guideUrl)}`;
@@ -70,14 +67,6 @@ export default function HostPanel({ onDisplayMode, onLogout, postCount, setPostC
     }
   };
 
-  const onSetCount = () => {
-    const val = parseInt(countInput, 10);
-    if (!isNaN(val) && val >= 0) {
-      setPostCount(val);
-      setCountInput('');
-    }
-  };
-
   return (
     <div className="fixed bottom-16 right-4 z-50">
       <AnimatePresence>
@@ -86,7 +75,7 @@ export default function HostPanel({ onDisplayMode, onLogout, postCount, setPostC
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="mb-2 w-80 rounded-2xl backdrop-blur-xl bg-black/70 text-white border border-white/10 shadow-2xl p-4 space-y-2 max-h-[70vh] overflow-y-auto"
+            className="mb-2 w-80 rounded-2xl backdrop-blur-xl bg-black/70 text-white border border-white/10 shadow-2xl p-4 space-y-2"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-black uppercase tracking-widest opacity-80">Host Panel</span>
@@ -133,60 +122,6 @@ export default function HostPanel({ onDisplayMode, onLogout, postCount, setPostC
                 </button>
               </motion.form>
             )}
-
-            <button
-              onClick={() => { setShowCount((v) => !v); setCountInput(String(postCount)); }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-bold transition"
-            >
-              <Hash size={14} /> Post Count ({postCount})
-            </button>
-
-            {showCount && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="bg-white/10 rounded-lg p-3 space-y-2"
-              >
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPostCount((n) => Math.max(0, n - 1))}
-                    className="h-8 w-8 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="flex-1 text-center text-lg font-black">{postCount}</span>
-                  <button
-                    onClick={() => setPostCount((n) => n + 1)}
-                    className="h-8 w-8 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    value={countInput}
-                    onChange={(e) => setCountInput(e.target.value)}
-                    type="number"
-                    min="0"
-                    placeholder="Set count"
-                    className="flex-1 px-3 py-1.5 rounded-md bg-white/10 border border-white/20 text-sm font-semibold placeholder:text-white/40 focus:outline-none focus:border-white/50"
-                  />
-                  <button
-                    onClick={onSetCount}
-                    className="px-3 py-1.5 rounded-md bg-vibe-orange text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition"
-                  >
-                    Set
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            <button
-              onClick={onDisplayMode}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-bold transition"
-            >
-              <Monitor size={14} /> Display Mode
-            </button>
 
             <button
               onClick={() => setShowQr((v) => !v)}
